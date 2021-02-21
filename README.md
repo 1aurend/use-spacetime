@@ -26,7 +26,6 @@ There are two ways to use `useInterval` depending on the setup of your project. 
 
 ## The API
 
-&nbsp;
 ### `useScrub`
 
 Usage:
