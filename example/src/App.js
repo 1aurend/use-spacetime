@@ -1,11 +1,16 @@
 import React from 'react'
-import { useMyHook } from 'use-spacetime'
+import useScrub from 'use-spacetime'
 
 const App = () => {
-  const example = useMyHook()
+  const keyframes = {
+    0: 25,
+    50: 50,
+    100: 100
+  }
+  const test = useScrub(keyframes, 0.5)
   return (
     <div>
-      {example}
+      {test.current}
     </div>
   )
 }
