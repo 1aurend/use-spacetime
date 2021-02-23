@@ -14,7 +14,7 @@ const kfToSeg = (i, keyframes) => {
   const fromNum = typeof from === 'string' ? from.indexOf('rgb') >= 0 ? from : from.match(/[+-]?(\d*\.?\d+)/g).map(Number)[0] : from
   const to = keyframes[Object.keys(keyframes)[i]]
   const toNum = typeof to === 'string' ? to.indexOf('rgb') >= 0 ? to : to.match(/[+-]?(\d*\.?\d+)/g).map(Number)[0] : to
-  const unit = typeof from === 'string' ? from.indexOf('rgb') >= 0 ? 'rgb' : from.replace(/[^a-zA-Z]/g, '') : ''
+  const unit = typeof from === 'string' ? from.indexOf('rgb') >= 0 ? 'rgb' : from.replace(/[^a-zA-Z%]/g, '') : ''
   return {
     start: start,
     end: end,
