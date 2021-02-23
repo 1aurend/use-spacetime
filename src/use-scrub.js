@@ -4,19 +4,23 @@ import { useLayoutEffect } from 'react'
 const filter = (keyframes, type) => {
   return Object.keys(keyframes)
     .filter(key => keyframes[key][type] !== undefined)
-    .reduce((acc, key) => Object.assign(acc, { [key]: keyframes[key] }), {})
+    .reduce((acc, key) => Object.assign(acc, { [key]: keyframes[key][type] }), {})
 }
 
-const kfToSeg = (i, keyframes, type) => {
+const kfToSeg = (i, keyframes) => {
   const start = Object.keys(keyframes)[i - 1] / 100
   const end = Object.keys(keyframes)[i] / 100
-  const from = type ? keyframes[Object.keys(keyframes)[i - 1]][type] : keyframes[Object.keys(keyframes)[i - 1]]
-  const to = type ? keyframes[Object.keys(keyframes)[i]][type] : keyframes[Object.keys(keyframes)[i]]
+  const from = keyframes[Object.keys(keyframes)[i - 1]]
+  const fromNum = typeof from === 'string' ? from.match(/[+-]?\d+(?:\.\d+)?/g).map(Number)[0] : from
+  const to = keyframes[Object.keys(keyframes)[i]]
+  const toNum = typeof to === 'string' ? to.match(/[+-]?\d+(?:\.\d+)?/g).map(Number)[0] : to
+  const unit = typeof from === 'string' ? from.replace(/[^a-zA-Z]/g, '') : ''
   return {
     start: start,
     end: end,
-    from: from,
-    to: to
+    from: fromNum,
+    to: toNum,
+    unit: unit
   }
 }
 
@@ -51,12 +55,12 @@ export default function useScrub(params, globalCurrent, interval=null) {
         .filter(kf => current * 100 <= kf)[0]
     )
   const currentSegment = currentIndex > 0
-    ? kfToSeg(currentIndex, validKfs, type)
+    ? kfToSeg(currentIndex, validKfs)
     : currentIndex === 0
-      ? kfToSeg(1, validKfs, type)
-      : kfToSeg(Object.keys(validKfs).length - 1, validKfs, type)
+      ? kfToSeg(1, validKfs)
+      : kfToSeg(Object.keys(validKfs).length - 1, validKfs)
 
-  const init = type ? validKfs[Object.keys(validKfs)[0]][type] : validKfs[Object.keys(validKfs)[0]]
+  const init = validKfs[Object.keys(validKfs)[0]]
   const val = useMotionValue(init)
 
   useLayoutEffect(() => {
@@ -65,10 +69,10 @@ export default function useScrub(params, globalCurrent, interval=null) {
       const currentPercent = (current - start) / delta
       return currentPercent
     }
-    const getCurrentVal = (percent, from, to) => {
+    const getCurrentVal = (percent, from, to, unit) => {
       const delta = to - from
       const val = delta >= 0 ? (from + (delta * percent)).toFixed(4) : (from - Math.abs(delta * percent)).toFixed(4)
-      return val
+      return `${val}${unit}`
     }
 
     const setScrubMotionValue = () => {
@@ -76,18 +80,18 @@ export default function useScrub(params, globalCurrent, interval=null) {
         if (currentSegment.start - current > buffer) {
           return
         }
-        val.set(currentSegment.from)
+        val.set(`${currentSegment.from}${currentSegment.unit}`)
         return
       }
       if (current > currentSegment.end) {
         if (current - currentSegment.end > buffer) {
           return
         }
-        val.set(currentSegment.to)
+        val.set(`${currentSegment.to}${currentSegment.unit}`)
         return
       }
       const currentScrubPercent = getScrubPercent(current, currentSegment.start, currentSegment.end)
-      val.set(getCurrentVal(currentScrubPercent, currentSegment.from, currentSegment.to))
+      val.set(getCurrentVal(currentScrubPercent, currentSegment.from, currentSegment.to, currentSegment.unit))
     }
     setScrubMotionValue()
   }, [buffer, current, val, currentSegment])
