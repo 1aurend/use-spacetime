@@ -11,10 +11,10 @@ const kfToSeg = (i, keyframes) => {
   const start = Object.keys(keyframes)[i - 1] / 100
   const end = Object.keys(keyframes)[i] / 100
   const from = keyframes[Object.keys(keyframes)[i - 1]]
-  const fromNum = typeof from === 'string' ? from.match(/[+-]?\d+(?:\.\d+)?/g).map(Number)[0] : from
+  const fromNum = typeof from === 'string' ? from.indexOf('rgb') >= 0 ? from : from.match(/[+-]?(\d*\.?\d+)/g).map(Number)[0] : from
   const to = keyframes[Object.keys(keyframes)[i]]
-  const toNum = typeof to === 'string' ? to.match(/[+-]?\d+(?:\.\d+)?/g).map(Number)[0] : to
-  const unit = typeof from === 'string' ? from.replace(/[^a-zA-Z]/g, '') : ''
+  const toNum = typeof to === 'string' ? to.indexOf('rgb') >= 0 ? to : to.match(/[+-]?(\d*\.?\d+)/g).map(Number)[0] : to
+  const unit = typeof from === 'string' ? from.indexOf('rgb') >= 0 ? 'rgb' : from.replace(/[^a-zA-Z]/g, '') : ''
   return {
     start: start,
     end: end,
@@ -70,6 +70,19 @@ export default function useScrub(params, globalCurrent, interval=null) {
       return currentPercent
     }
     const getCurrentVal = (percent, from, to, unit) => {
+      if (unit === 'rgb') {
+        const fromArr = from
+          .match(/[+-]?(\d*\.?\d+)/g)
+          .map(val => Number(val))
+        const toArr = to
+          .match(/[+-]?(\d*\.?\d+)/g)
+          .map(val => Number(val))
+        const vals = fromArr.map((val, i) => {
+          const delta = toArr[i] - fromArr[i]
+          return delta >= 0 ? (val + (delta * percent)).toFixed(4) : (val - Math.abs(delta * percent)).toFixed(4)
+        })
+        return `rgba(${vals[0]},${vals[1]},${vals[2]},${vals[3] || 1.0})`
+      }
       const delta = to - from
       const val = delta >= 0 ? (from + (delta * percent)).toFixed(4) : (from - Math.abs(delta * percent)).toFixed(4)
       return `${val}${unit}`
