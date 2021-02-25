@@ -43,7 +43,7 @@ const getLocalCurrent = (current, interval) => {
 
 export default function useScrub(params, globalCurrent, interval=null) {
   const localCurrent = interval ? getLocalCurrent(globalCurrent, interval) : null
-  const current = localCurrent !== null ? localCurrent : globalCurrent
+  const current = localCurrent ?? globalCurrent
   const buffer = params.buffer || 0.05
   const type = params.type || null
   const keyframes = params.keyframes || params
